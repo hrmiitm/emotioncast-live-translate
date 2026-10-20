@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self' blob:; connect-src 'self'; img-src 'self' data:"
+    />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EmotionCast Studio</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside>
+      <div class="brand">
+        ◈ <span>emotioncast<small>DESKTOP STUDIO</small></span>
+      </div>
+      <div class="nav active">◉ &nbsp; Live studio</div>
+      <div class="appearance-panel">
+        <div class="panel-heading">APPEARANCE</div>
+        <div class="theme-picker" role="radiogroup" aria-label="Theme mode">
+          <button type="button" class="theme-chip active" data-theme-val="system" id="themeSystem" title="Follow OS theme (Default)">🌓 Auto</button>
+          <button type="button" class="theme-chip" data-theme-val="light" id="themeLight" title="Light / White mode">☀️ Light</button>
+          <button type="button" class="theme-chip" data-theme-val="dark" id="themeDark" title="Dark mode">🌙 Dark</button>
+        </div>
+        <div class="panel-heading" style="margin-top: 14px;">TEXT & ZOOM</div>
+        <div class="zoom-picker">
+          <button type="button" class="zoom-btn" id="zoomOut" title="Zoom out (Ctrl -)">A−</button>
+          <span id="zoomLevel" class="zoom-level">105%</span>
+          <button type="button" class="zoom-btn" id="zoomIn" title="Zoom in (Ctrl +)">A+</button>
+          <button type="button" class="zoom-btn reset" id="zoomReset" title="Reset zoom (Ctrl 0)">↺</button>
+        </div>
+      </div>
+      <div class="sidecopy">Your voice.<br />Every language.</div>
+      <div class="sidefoot">
+        LOCAL AUDIO WORKSPACE<br /><span id="platform"></span>
+        <p>
+          Two directions. Independent sessions.<br />Headphones recommended.
+        </p>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <div class="eyebrow">REALTIME INTERPRETATION</div>
+          <h1>Live translation studio</h1>
+          <p>Connect your voice, your meeting, and your world.</p>
+        </div>
+        <button id="stopAll" class="danger">■ Stop all</button>
+      </header>
+      <div id="notice" role="status">Ready to configure your connection.</div>
+      <section class="card">
+        <div class="sectionhead">
+          <h2><span class="number">01</span> Connection</h2>
+          <span class="tag">WEBSOCKET · LIVE API</span>
+        </div>
+        <div class="grid four">
+          <label
+            >Provider<select id="provider">
+              <option value="gemini">Gemini · Official</option>
+              <option value="foundry">LLM Foundry · Gemini</option>
+            </select></label
+          ><label class="span2">Base URL<input id="base" type="url" /></label
+          ><label
+            >API version<select id="version">
+              <option>v1beta</option>
+              <option>v1alpha</option>
+              <option>v1</option>
+            </select></label
+          ><label class="span2"
+            >API key<input
+              id="key"
+              type="password"
+              autocomplete="off"
+              placeholder="Enter key · kept out of renderer storage" /></label
+          ><label>Foundry project<input id="project" /></label>
+          <div class="keyactions">
+            <label class="check"
+              ><input id="remember" type="checkbox" />Remember securely</label
+            ><button id="saveKey">Set key</button
+            ><button id="forgetKey">Forget</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button id="check">Check live connection</button
+          ><span id="connectionStatus"
+            >Checks model setup without capturing audio</span
+          ><button id="save" class="quiet">Save settings</button
+          ><button id="reset" class="quiet">Reset settings</button>
+        </div>
+      </section>
+      <section class="card" id="tuningCard">
+        <div class="sectionhead">
+          <div>
+            <h2>Latency & session tuning</h2>
+            <span class="tag">REAL-TIME WEBSOCKET PIPELINE</span>
+          </div>
+          <div class="spend-container">
+            <div class="spend-line">
+              <span class="spend-label">All-time estimated spend</span>
+              <span class="spend-val" id="spendAmount">$0.0000 + unpriced</span>
+            </div>
+            <a href="#usage" id="viewUsageLink" class="usage-link">View usage ↗</a>
+          </div>
+        </div>
+
+        <div class="tuning-grid">
+          <label class="tuning-field">
+            Preset
+            <select id="tuningPreset">
+              <option value="custom">Custom</option>
+              <option value="ultra-low" selected>Ultra low latency</option>
+              <option value="low">Low latency</option>
+              <option value="balanced">Balanced</option>
+              <option value="high-stability">High stability</option>
+            </select>
+          </label>
+
+          <label class="tuning-field">
+            Send audio every (ms)
+            <input type="number" id="tuningChunk" min="20" max="200" step="10" value="20" />
+          </label>
+
+          <label class="tuning-field">
+            Playback buffer (ms)
+            <input type="number" id="tuningBuffer" min="10" max="1000" step="10" value="40" />
+          </label>
+
+          <label class="tuning-field">
+            Maximum queued audio (ms)
+            <input type="number" id="tuningMaxBuffer" min="300" max="15000" step="100" value="1000" />
+          </label>
+
+          <label class="tuning-field">
+            Stop after silence (seconds; 0 = off)
+            <input type="number" id="tuningStopAfterSilence" min="0" max="3600" step="5" value="0" />
+          </label>
+        </div>
+
+        <p class="tuning-help-text">
+          Applied on the next start in either direction. A smaller queue discards older translated speech to catch up. Clear delayed audio empties the current queue immediately. Model and network delay remain variable.
+        </p>
+
+        <div class="tuning-actions">
+          <button id="saveTuningBtn" class="primary">Save tuning</button>
+          <button id="clearDelayedAudioBtn" class="quiet">Clear delayed audio</button>
+          <span class="websocket-live-badge" id="wsTuningBadge">
+            <span class="ws-dot"></span> WebSocket live streaming · TCP_NODELAY active
+          </span>
+        </div>
+
+        <div id="usageModal" class="usage-drawer" hidden>
+          <div class="usage-box">
+            <div class="usage-header">
+              <h3>Session usage & spend breakdown</h3>
+              <button type="button" id="closeUsageBtn" class="quiet">✕</button>
+            </div>
+            <div class="usage-stats-grid">
+              <div class="stat-card">
+                <small>TOTAL AUDIO SENT (IN)</small>
+                <b id="usageAudioIn">0.0s</b>
+              </div>
+              <div class="stat-card">
+                <small>TOTAL AUDIO RECEIVED (OUT)</small>
+                <b id="usageAudioOut">0.0s</b>
+              </div>
+              <div class="stat-card">
+                <small>TRANSLATION SESSIONS</small>
+                <b id="usageSessionsCount">0</b>
+              </div>
+              <div class="stat-card">
+                <small>ESTIMATED TOTAL SPEND</small>
+                <b id="usageTotalCost" class="highlight-cost">$0.0000</b>
+              </div>
+            </div>
+            <p class="muted">
+              Estimated using Google Gemini Live rate cards (~$0.70/1M input tokens, ~$2.00/1M output tokens). Actual billing is tracked in your Google AI Studio or Cloud console.
+            </p>
+            <div class="usage-actions">
+              <button id="resetUsageBtn" class="quiet">Reset usage counter</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div id="channels" class="channels"></div>
+      <section class="card">
+        <div class="sectionhead">
+          <h2><span class="number">04</span> Google Meet audio routing setup</h2>
+          <div>
+            <button id="autoRouteMeet" class="primary">⚡ Auto-Route Everything</button>
+            <button id="createRoutes">Recreate virtual devices</button>
+            <button id="refresh">Refresh devices</button>
+            <button id="removeRoutes" class="quiet">Remove virtual devices</button>
+          </div>
+        </div>
+        <div class="meet-guide-grid">
+          <div class="guide-card highlight">
+            <span class="guide-tag meet">STEP 1 · IN GOOGLE MEET (MEET.GOOGLE.COM)</span>
+            <div class="guide-title">Settings → Audio Options</div>
+            <div class="guide-desc">In your Google Meet call, open <strong>Settings → Audio</strong> and select these exact names:</div>
+            <div class="guide-rows">
+              <div class="guide-row">
+                <span class="guide-icon">🎙️</span>
+                <div class="guide-content">
+                  <div class="guide-field-name">Google Meet Microphone</div>
+                  <div class="guide-target-name">EmotionCast (Google Meet Microphone)</div>
+                  <div class="guide-target-desc">Picks up your translated speech so other meeting participants hear you.</div>
+                </div>
+              </div>
+              <div class="guide-row">
+                <span class="guide-icon">🔊</span>
+                <div class="guide-content">
+                  <div class="guide-field-name">Google Meet Speaker</div>
+                  <div class="guide-target-name">EmotionCast (Google Meet Speaker)</div>
+                  <div class="guide-target-desc">Sends incoming meeting speech into EmotionCast so it can be translated.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="guide-card">
+            <span class="guide-tag app">STEP 2 · IN EMOTIONCAST APP (CHANNELS ABOVE)</span>
+            <div class="guide-title">Desktop Studio Channel Assignments</div>
+            <div class="guide-desc">Configure the channels in sections 02 and 03 (or click <strong>⚡ Auto-Route Everything</strong>):</div>
+            <div class="guide-rows">
+              <div class="guide-row">
+                <span class="guide-icon">🗣️</span>
+                <div class="guide-content">
+                  <div class="guide-field-name">Speak Channel (Section 02 · You → Meet)</div>
+                  <div class="guide-target-desc">Input: <strong>Your Physical Microphone</strong> (or System Default)</div>
+                  <div class="guide-target-name">Output: ★ EmotionCast - To Meet Microphone</div>
+                </div>
+              </div>
+              <div class="guide-row">
+                <span class="guide-icon">👂</span>
+                <div class="guide-content">
+                  <div class="guide-field-name">Listen Channel (Section 03 · Meet → You)</div>
+                  <div class="guide-target-name">Input: ★ EmotionCast - From Meet Speaker</div>
+                  <div class="guide-target-desc">Output: <strong>Your Real Headphones</strong> (or System Default)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="muted">
+          Virtual devices are managed locally via PulseAudio / PipeWire. If you ever experience audio issues in Meet, click "⚡ Auto-Route Everything" to recreate and verify the virtual routes.
+        </p>
+        <pre id="routeStatus">Create devices, refresh, then select them in each channel and Google Meet.</pre>
+      </section>
+      <section class="card">
+        <div class="sectionhead">
+          <h2>Session activity</h2>
+          <div>
+            <button id="export">Export transcript & diagnostics</button
+            ><button id="clear" class="quiet">Clear</button>
+          </div>
+        </div>
+        <pre id="log" aria-live="polite">No activity yet.</pre>
+      </section>
+      <footer>
+        EmotionCast Studio · Audio leaves this device only during an active
+        session. Settings apply to the next connection.
+      </footer>
+    </main>
+    <datalist id="languages"></datalist>
+    <script type="module" src="renderer.js"></script>
+  </body>
+</html>

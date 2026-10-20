@@ -1,0 +1,8 @@
+test/
+evidence/
+scripts/
+dist/
+.env
+.env.example
+VERIFICATION.md
+builder-effective-config.yaml

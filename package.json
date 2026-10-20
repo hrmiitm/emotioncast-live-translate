@@ -1,0 +1,57 @@
+{
+  "name": "emotioncast-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "app/main.js",
+  "bin": {
+    "emotioncast-desktop": "./start.mjs",
+    "emotioncast": "./start.mjs"
+  },
+  "scripts": {
+    "start": "node start.mjs",
+    "test": "node --test test/*.test.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --linux AppImage",
+    "dist:linux": "electron-builder --linux AppImage",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:all": "electron-builder --linux AppImage --mac dmg zip"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^42.0.0",
+    "electron-builder": "26.15.3",
+    "prettier": "^3.9.10",
+    "puppeteer-core": "^25.14.0"
+  },
+  "build": {
+    "appId": "com.emotioncast.desktop",
+    "productName": "EmotionCast",
+    "files": [
+      "app/**/*",
+      "start.mjs",
+      "package.json"
+    ],
+    "linux": {
+      "category": "AudioVideo",
+      "icon": "app/icon.png",
+      "target": [
+        "AppImage"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "app/icon.png",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    }
+  },
+  "description": "A two-way live audio translation studio for Gemini and Google Meet",
+  "author": "EmotionCast"
+}
