@@ -74,10 +74,10 @@ const tuningPresets = {
 };
 
 let tuning = {
-  preset: "ultra-low",
-  chunk: 20,
-  buffer: 40,
-  maxBuffer: 1000,
+  preset: "low",
+  chunk: 40,
+  buffer: 60,
+  maxBuffer: 1500,
   stopAfterSilence: 0,
 };
 
