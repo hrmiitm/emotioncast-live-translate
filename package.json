@@ -15,7 +15,8 @@
     "dist": "electron-builder --linux AppImage",
     "dist:linux": "electron-builder --linux AppImage",
     "dist:mac": "electron-builder --mac dmg zip",
-    "dist:all": "electron-builder --linux AppImage --mac dmg zip"
+    "dist:win": "electron-builder --win nsis",
+    "dist:all": "electron-builder --linux AppImage --mac dmg zip --win nsis"
   },
   "dependencies": {
     "ws": "^8.18.0"
@@ -50,6 +51,21 @@
       ],
       "hardenedRuntime": false,
       "gatekeeperAssess": false
+    },
+    "win": {
+      "icon": "app/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
   },
   "description": "A two-way live audio translation studio for Gemini and Google Meet",

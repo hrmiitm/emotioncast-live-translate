@@ -1,0 +1,203 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Linux — AppImage
+  # ──────────────────────────────────────────────
+  build-linux:
+    name: 🐧 Linux AppImage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Linux AppImage
+        run: npm run dist:linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: dist/*.AppImage
+          retention-days: 1
+
+  # ──────────────────────────────────────────────
+  # macOS — DMG + ZIP
+  # ──────────────────────────────────────────────
+  build-mac:
+    name: 🍏 macOS DMG
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS DMG & ZIP
+        run: npm run dist:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-dmg
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          retention-days: 1
+
+  # ──────────────────────────────────────────────
+  # Windows — NSIS installer (.exe)
+  # ──────────────────────────────────────────────
+  build-windows:
+    name: 🪟 Windows NSIS
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows installer
+        run: npm run dist:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-nsis
+          path: dist/*.exe
+          retention-days: 1
+
+  # ──────────────────────────────────────────────
+  # GitHub Release — uploads all artifacts
+  # ──────────────────────────────────────────────
+  release:
+    name: 🚀 Create GitHub Release
+    needs: [build-linux, build-mac, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-appimage
+          path: release-assets/
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-dmg
+          path: release-assets/
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-nsis
+          path: release-assets/
+
+      - name: List release assets
+        run: ls -lh release-assets/
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            --title "EmotionCast Desktop $GITHUB_REF_NAME" \
+            --notes "## 🎙️ EmotionCast Desktop v${VERSION}
+
+          Real-time, two-way live audio translation studio for **Google Meet** and **Gemini Live API**.
+          Speak in your language — meeting participants hear theirs. Incoming speech translated live into your headphones.
+
+          ---
+
+          ### 📦 Downloads
+
+          | Platform | File | Notes |
+          |----------|------|-------|
+          | 🐧 Linux | \`EmotionCast-${VERSION}.AppImage\` | x64, no install needed — just chmod +x and run |
+          | 🍏 macOS | \`EmotionCast-${VERSION}.dmg\` | Drag & drop to Applications |
+          | 🍏 macOS | \`EmotionCast-${VERSION}-mac.zip\` | Portable zip archive |
+          | 🪟 Windows | \`EmotionCast Setup ${VERSION}.exe\` | NSIS installer, x64 |
+
+          ---
+
+          ### 🚀 Quick Start
+
+          1. **Download** the appropriate file for your OS above.
+          2. **Linux**: \`chmod +x EmotionCast-*.AppImage && ./EmotionCast-*.AppImage\`
+          3. **macOS**: Open the \`.dmg\`, drag **EmotionCast** to Applications. Right-click → Open on first launch (unsigned app).
+          4. **Windows**: Run the \`.exe\` installer, follow prompts.
+          5. Paste your [Gemini API key](https://aistudio.google.com/apikey) in **Section 01 → Connection**.
+          6. Click **Check live connection** → configure audio channels → **▶ Start**.
+
+          ---
+
+          ### ✨ Features
+
+          - 🌐 Two-way live audio translation (speak & listen) in real time
+          - 🎤 Seamless **Google Meet** integration via virtual audio routing (PulseAudio/PipeWire on Linux, BlackHole on macOS, VB-CABLE on Windows)
+          - 🤖 Powered by **Gemini Live API** with 30+ language support and 100+ AI voices
+          - 🔒 API key securely stored in OS keyring via Electron \`safeStorage\`
+          - 🎨 Dark / Light / Auto themes with per-session font-size zoom controls
+          - ⚡ Tunable latency presets (20ms–80ms audio send intervals, configurable playback buffer)
+          - 📊 Live token & spend estimation per session
+
+          ---
+
+          ### 🛠️ Requirements
+
+          - **Linux**: Any modern 64-bit distro (AppImage — no install required)
+          - **macOS**: macOS 11 Big Sur or later
+          - **Windows**: Windows 10/11 x64
+          - **API**: Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+
+          ---
+
+          > ⚠️ **macOS**: App is not code-signed. Right-click → Open on first launch to bypass Gatekeeper.
+          > ⚠️ **Linux**: Run \`chmod a+x EmotionCast-*.AppImage\` before launching." \
+            --draft=false \
+            --prerelease=false \
+            release-assets/*
