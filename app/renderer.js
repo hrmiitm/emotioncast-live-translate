@@ -1068,7 +1068,7 @@ $("#reset").onclick = guard(async () => {
     fill(c, { ...defaults, target: c.id === "listen" ? "en" : "hi" });
   applyTheme("system");
   applyZoom(1.05);
-  applyTuningValues(tuningPresets["ultra-low"]);
+  applyTuningValues(tuningPresets["low"]);
   await api.call("save", allSettings());
   notice("Settings reset.");
 });
@@ -1221,7 +1221,7 @@ saved = initial.settings;
 applyTheme(saved.theme || "system");
 applyZoom(typeof saved.zoom === "number" ? saved.zoom : 1.05);
 if (saved.tuning && saved.tuning.preset) applyTuningValues(saved.tuning);
-else applyTuningValues(tuningPresets["ultra-low"]);
+else applyTuningValues(tuningPresets["low"]);
 if (saved.usage) usage = { ...usage, ...saved.usage };
 updateSpendDisplay();
 for (const n of ["provider", "base", "version", "project"])

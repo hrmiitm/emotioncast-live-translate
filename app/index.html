@@ -109,8 +109,8 @@
             Preset
             <select id="tuningPreset">
               <option value="custom">Custom</option>
-              <option value="ultra-low" selected>Ultra low latency</option>
-              <option value="low">Low latency</option>
+              <option value="ultra-low">Ultra low latency</option>
+              <option value="low" selected>Low latency</option>
               <option value="balanced">Balanced</option>
               <option value="high-stability">High stability</option>
             </select>
@@ -118,17 +118,17 @@
 
           <label class="tuning-field">
             Send audio every (ms)
-            <input type="number" id="tuningChunk" min="20" max="200" step="10" value="20" />
+            <input type="number" id="tuningChunk" min="20" max="200" step="10" value="40" />
           </label>
 
           <label class="tuning-field">
             Playback buffer (ms)
-            <input type="number" id="tuningBuffer" min="10" max="1000" step="10" value="40" />
+            <input type="number" id="tuningBuffer" min="10" max="1000" step="10" value="60" />
           </label>
 
           <label class="tuning-field">
             Maximum queued audio (ms)
-            <input type="number" id="tuningMaxBuffer" min="300" max="15000" step="100" value="1000" />
+            <input type="number" id="tuningMaxBuffer" min="300" max="15000" step="100" value="1500" />
           </label>
 
           <label class="tuning-field">
