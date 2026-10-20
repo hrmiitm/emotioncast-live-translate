@@ -64,6 +64,19 @@ async function routes(action) {
         if (id) await pactl("unload-module", id).catch(() => {});
       }
     }
+    // Save current real default sink/source BEFORE loading modules.
+    // PulseAudio/PipeWire auto-switches the system default output to any newly
+    // created null-sink. That makes every app's audio unexpectedly flow through
+    // the virtual cable, and the monitor mic "listens" to everything — even
+    // when EmotionCast is idle/stopped. Restoring the originals immediately
+    // after module creation prevents this.
+    let prevDefaultSink, prevDefaultSource;
+    try {
+      const info = await pactl("info");
+      prevDefaultSink = info.match(/Default Sink:\s*(.+)/)?.[1]?.trim();
+      prevDefaultSource = info.match(/Default Source:\s*(.+)/)?.[1]?.trim();
+    } catch {}
+
     const ids = [];
     try {
       // 1. Send pipe: EmotionCast Speak output -> Google Meet Microphone
@@ -103,12 +116,19 @@ async function routes(action) {
           'source_properties="device.description=\'EmotionCast - From Meet Speaker (App Input)\'"',
         ),
       );
-      await save("routes.json", { ids });
+      await save("routes.json", { ids, prevDefaultSink, prevDefaultSource });
     } catch (e) {
       for (const id of ids.reverse())
         await pactl("unload-module", id).catch(() => {});
       throw e;
     }
+
+    // Restore the real system defaults so no other app is unexpectedly
+    // re-routed through the virtual cables while EmotionCast is idle.
+    if (prevDefaultSink && !prevDefaultSink.startsWith("emotioncast_desktop_"))
+      await pactl("set-default-sink", prevDefaultSink).catch(() => {});
+    if (prevDefaultSource && !prevDefaultSource.startsWith("emotioncast_desktop_"))
+      await pactl("set-default-source", prevDefaultSource).catch(() => {});
   }
   if (action === "remove") {
     const lines = (await pactl("list", "short", "modules")).split("\n");
@@ -121,6 +141,13 @@ async function routes(action) {
     for (const id of [...(saved.ids || [])].reverse()) {
       await pactl("unload-module", id).catch(() => {});
     }
+    // Also restore real defaults that were saved at creation time
+    const restoredSink = saved.prevDefaultSink;
+    const restoredSource = saved.prevDefaultSource;
+    if (restoredSink && !restoredSink.startsWith("emotioncast_desktop_"))
+      await pactl("set-default-sink", restoredSink).catch(() => {});
+    if (restoredSource && !restoredSource.startsWith("emotioncast_desktop_"))
+      await pactl("set-default-source", restoredSource).catch(() => {});
     await save("routes.json", {});
   }
   return {
